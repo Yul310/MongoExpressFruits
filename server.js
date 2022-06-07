@@ -54,3 +54,65 @@ const fruitsSchema = new Schema({
 });
 
 const Fruit = model("Fruit",fruitsSchema)
+
+
+/////////////////////////////////////////////////
+// Create our Express Application Object
+/////////////////////////////////////////////////
+
+const app = require("liquid-express-views")(express(), {root: [path.resolve(__dirname, 'views/')]})
+
+/////////////////////////////////////////////////////
+// Middleware
+/////////////////////////////////////////////////////
+app.use(morgan("tiny")); //logging
+app.use(methodOverride("_method")); // override for put and delete requests from forms
+app.use(express.urlencoded({ extended: true })); // parse urlencoded request bodies
+app.use(express.static("public")); // serve files from public statically
+
+
+////////////////////////////////////////////
+// Routes
+////////////////////////////////////////////
+app.get("/", (req, res) => {
+    res.send("your server is running... better catch it.");
+  });
+
+
+app.get("/fruits/seed", (req, res) => {
+    // array of starter fruits
+    const startFruits = [
+      { name: "Orange", color: "orange", readyToEat: false },
+      { name: "Grape", color: "purple", readyToEat: false },
+      { name: "Banana", color: "orange", readyToEat: false },
+      { name: "Strawberry", color: "red", readyToEat: false },
+      { name: "Coconut", color: "brown", readyToEat: false },
+    ];
+  
+    // Delete all fruits
+    Fruit.deleteMany({}).then((data) => {
+      // Seed Starter Fruits
+      Fruit.create(startFruits).then((data) => {
+        // send created fruits as response to confirm creation
+        res.json(data);
+      });
+    });
+  });
+  
+  
+
+
+//////////////////////////////////////////////
+// Server Listener
+//////////////////////////////////////////////
+const PORT = process.env.PORT;
+app.listen(PORT, () => console.log(`Now Listening on port ${PORT}`));
+
+
+// index route
+app.get("/fruits", (req, res) => {
+    Fruit.find({}, (err, fruits) => {
+      res.render("fruits/index.liquid", { fruits });
+    });
+  });
+  
